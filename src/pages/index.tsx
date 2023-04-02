@@ -2,6 +2,7 @@ import { SignIn, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import LoadingSpinner from "~/components/Loading";
 
 import { api, type RouterOutputs } from "~/utils/api";
 
@@ -68,14 +69,28 @@ const PostView = ({ post, author }: PostWithAuthor) => {
           &nbsp; · &nbsp;
           <span className="text-slate-400">{timeAgo(post.createdAt)}</span>
         </div>
-        <p>{post.content}</p>
+        <p className="text-2xl">{post.content}</p>
       </div>
     </div>
   );
 };
 
+const Feed = () => {
+  const { data, isLoading } = api.posts.getAll.useQuery();
+
+  return isLoading ? (
+    <LoadingSpinner />
+  ) : (
+    <div className="flex flex-col ">
+      {data?.map((fullPost) => (
+        <PostView key={fullPost.post.id} {...fullPost} />
+      ))}
+    </div>
+  );
+};
+
 const Home: NextPage = () => {
-  const hello = api.posts.getAll.useQuery();
+  const { data, isLoading } = api.posts.getAll.useQuery();
   const user = useUser();
 
   return (
@@ -96,11 +111,7 @@ const Home: NextPage = () => {
               </div>
             )}
           </div>
-          <div className="flex flex-col ">
-            {hello.data?.map((fullPost) => (
-              <PostView key={fullPost.post.id} {...fullPost} />
-            ))}
-          </div>
+          <Feed />
         </div>
       </main>
     </>
