@@ -17,12 +17,15 @@ export const profileRouter = createTRPCRouter({
         profileImageUrl: user.profileImageUrl,
       }));
 
-      if (!user) {
+      if (!user || !user.username) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: `User ${input.username} not found.`,
         });
       }
-      return user;
+      return {
+        ...user,
+        username: user.username,
+      };
     }),
 });
