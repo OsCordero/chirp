@@ -3,6 +3,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import LoadingSpinner from "~/components/Loading";
 
 import { api, type RouterOutputs } from "~/utils/api";
@@ -14,6 +15,23 @@ const CreatePostWizard = () => {
     onSuccess: async () => {
       await ctx.posts.getAll.invalidate();
       setInput("");
+    },
+    onError: (e) => {
+      const fieldErrors = e.data?.zodError?.fieldErrors;
+      if (fieldErrors) {
+        toast.error(
+          <ul>
+            {Object.entries(fieldErrors).map(([_field, errors]) =>
+              errors?.map((error) => <li key={error}>{error}</li>)
+            )}
+          </ul>
+        );
+      }
+
+      // show the first error
+      else {
+        toast.error("Failed to post! Please try again later.");
+      }
     },
   });
   const [input, setInput] = useState("");
