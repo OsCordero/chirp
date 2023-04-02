@@ -2,9 +2,11 @@ import { SignIn, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import LoadingSpinner from "~/components/Loading";
+import LoadingSpinner, { AbsoluteLoadingSpinner } from "~/components/Loading";
+import { toastListErrors } from "~/helpers";
 
 import { api, type RouterOutputs } from "~/utils/api";
 
@@ -19,17 +21,9 @@ const CreatePostWizard = () => {
     onError: (e) => {
       const fieldErrors = e.data?.zodError?.fieldErrors;
       if (fieldErrors) {
-        toast.error(
-          <ul>
-            {Object.entries(fieldErrors).map(([_field, errors]) =>
-              errors?.map((error) => <li key={error}>{error}</li>)
-            )}
-          </ul>
-        );
-      }
-
-      // show the first error
-      else {
+        const allErrors = Object.values(fieldErrors).flat();
+        toastListErrors(allErrors);
+      } else {
         toast.error("Failed to post! Please try again later.");
       }
     },
@@ -46,18 +40,29 @@ const CreatePostWizard = () => {
         width={56}
         height={56}
       />
-      <input
-        type="text"
-        placeholder="Add some emojis"
-        className="grow bg-transparent p-4"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        disabled={isLoading}
-      />
-
-      <button onClick={() => mutate({ content: input })} disabled={isLoading}>
-        Post
-      </button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          mutate({ content: input });
+        }}
+        className="flex-growf flex w-full items-center"
+      >
+        <input
+          type="text"
+          placeholder="Add some emojis"
+          className="grow bg-transparent p-4"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          disabled={isLoading}
+        />
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : (
+          <button disabled={isLoading} type="submit">
+            Post
+          </button>
+        )}
+      </form>
     </div>
   );
 };
@@ -99,9 +104,13 @@ const PostView = ({ post, author }: PostWithAuthor) => {
       />
       <div className="flex flex-col">
         <div className="flex text-slate-300">
-          <span>{`@${author.username}`}</span>
-          &nbsp; · &nbsp;
-          <span className="text-slate-400">{timeAgo(post.createdAt)}</span>
+          <Link href={`/@${author.username}`}>
+            <span>{`@${author.username}`}</span>
+          </Link>
+          <Link href={`/post/${post.id}`}>
+            &nbsp; · &nbsp;
+            <span className="text-slate-400">{timeAgo(post.createdAt)}</span>
+          </Link>
         </div>
         <p className="text-2xl">{post.content}</p>
       </div>
@@ -113,7 +122,7 @@ const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
 
   return isLoading ? (
-    <LoadingSpinner />
+    <AbsoluteLoadingSpinner />
   ) : (
     <div className="flex flex-col ">
       {data?.map((fullPost) => (
