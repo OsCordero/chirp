@@ -2,12 +2,21 @@ import { SignIn, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { useState } from "react";
 import LoadingSpinner from "~/components/Loading";
 
 import { api, type RouterOutputs } from "~/utils/api";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
+  const ctx = api.useContext();
+  const { mutate, isLoading } = api.posts.createPost.useMutation({
+    onSuccess: async () => {
+      await ctx.posts.getAll.invalidate();
+      setInput("");
+    },
+  });
+  const [input, setInput] = useState("");
 
   if (!user) return null;
   return (
@@ -23,7 +32,14 @@ const CreatePostWizard = () => {
         type="text"
         placeholder="Add some emojis"
         className="grow bg-transparent p-4"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isLoading}
       />
+
+      <button onClick={() => mutate({ content: input })} disabled={isLoading}>
+        Post
+      </button>
     </div>
   );
 };
@@ -90,7 +106,6 @@ const Feed = () => {
 };
 
 const Home: NextPage = () => {
-  const { data, isLoading } = api.posts.getAll.useQuery();
   const user = useUser();
 
   return (
