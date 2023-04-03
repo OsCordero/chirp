@@ -35,15 +35,11 @@ export const postsRouter = createTRPCRouter({
         });
       }
 
-      // add author to post from clerk
       const user = await getUserForClient({
         userId: [post.authorId],
       });
 
-      return {
-        post,
-        author: user,
-      };
+      return { post, author: user };
     }),
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.prisma.post.findMany({
