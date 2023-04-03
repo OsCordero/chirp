@@ -1,4 +1,3 @@
-import { createProxySSGHelpers } from "@trpc/react-query/ssg";
 import type {
   GetStaticPaths,
   GetStaticPropsContext,
@@ -7,13 +6,11 @@ import type {
 } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import SuperJSON from "superjson";
 import Layout from "~/components/Layout";
 import { AbsoluteLoadingSpinner } from "~/components/Loading";
 import PostView from "~/components/PostView";
-import { appRouter } from "~/server/api/root";
-import { prisma } from "~/server/db";
-import { type RouterOutputs, api } from "~/utils/api";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
+import { api, type RouterOutputs } from "~/utils/api";
 
 type PageProps = InferGetStaticPropsType<typeof getStaticProps>;
 
@@ -74,11 +71,7 @@ const Profile: NextPage<PageProps> = ({ username }) => {
 export async function getStaticProps(
   context: GetStaticPropsContext<{ slug: string }>
 ) {
-  const ssg = createProxySSGHelpers({
-    router: appRouter,
-    ctx: { user: null, prisma: prisma },
-    transformer: SuperJSON,
-  });
+  const ssg = generateSSGHelper();
   const slug = context.params?.slug as string;
   const username = slug.replace("@", "");
   await ssg.profile.getUserByUsername.prefetch({ username });
