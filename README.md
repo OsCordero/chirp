@@ -1,6 +1,6 @@
 # Chirp
 
-Minimal Twitter clone using Next.js + Trpc + Prisma
+Minimal Twitter-like site using Next.js + Trpc + Prisma (you can only post with emojis).
 
 ## Third party services used:
 
